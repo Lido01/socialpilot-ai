@@ -1,8 +1,6 @@
-
-*.env
-*.env.local
-*.env.example
-
-*.venv
-/node_modules
-*venv
+.venv/
+__pycache__/
+*.py[cod]
+.env
+.pytest_cache/
+.coverage
