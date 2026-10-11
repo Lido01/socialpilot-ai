@@ -1,4 +1,3 @@
-
 import os
 
 from dotenv import load_dotenv
@@ -8,6 +7,10 @@ from telegram.ext import (
     CommandHandler,
     ContextTypes,
 )
+
+import asyncio
+
+from ai_service import generate_social_post
 
 load_dotenv()
 
@@ -154,7 +157,61 @@ async def myid(
     await update.effective_message.reply_text(
         f"Your Telegram user ID is: {user.id}"
     )
-    
+
+
+async def generate(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    if not await is_admin(update):
+        return
+
+    topic = " ".join(context.args).strip()
+
+    if not topic:
+        await update.effective_message.reply_text(
+            "Tell me what to create.\n\n"
+            "Example:\n"
+            "/generate Promote our resort's weekend relaxation experience"
+        )
+        return
+
+    await update.effective_message.reply_text(
+        "Generating your social media draft..."
+    )
+
+    try:
+        post_text = await asyncio.to_thread(
+            generate_social_post,
+            topic,
+        )
+
+        user_id = update.effective_user.id
+
+        drafts = context.application.bot_data.setdefault(
+            "drafts", {}
+        )
+        drafts[user_id] = post_text
+
+        await update.effective_message.reply_text(
+            "AI DRAFT CREATED\n\n"
+            f"{post_text}\n\n"
+            "Review it before publishing.\n"
+            "Use /preview to review again.\n"
+            "Use /publish to post to your test channel.\n"
+            "Use /cancel to discard it."
+        )
+
+    except Exception:
+        # Log details privately during development.
+        import logging
+        logging.exception("Social post generation failed")
+
+        await update.effective_message.reply_text(
+            "I couldn't generate the post. "
+            "Check the application terminal for the error."
+        )
+
 def main():
     if not BOT_TOKEN:
         raise RuntimeError("Missing TELEGRAM_BOT_TOKEN in .env")
@@ -167,6 +224,8 @@ def main():
     application.add_handler(CommandHandler("preview", preview))
     application.add_handler(CommandHandler("publish", publish))
     application.add_handler(CommandHandler("cancel", cancel))
+    
+    application.add_handler(CommandHandler("generate", generate))
 
     print("SocialPilot AI bot is running...")
     application.run_polling()
