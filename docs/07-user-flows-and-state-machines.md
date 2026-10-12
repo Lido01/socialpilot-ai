@@ -66,9 +66,9 @@ flowchart TD
 | 4 | If no active company, present registration form | User |
 | 5 | Platform owner reviews and approves | Platform Owner |
 | 6 | User selects or is assigned to the company | System |
-| 7 | User invites team members (optional) | Owner/Admin |
-| 8 | User connects a Telegram channel | Owner/Admin |
-| 9 | User creates and publishes first post | Author |
+| 7 | User invites team members (optional) | Company Admin |
+| 8 | User connects a Telegram channel | Company Admin |
+| 9 | User creates and publishes first post | Content Creator |
 
 ---
 
@@ -165,21 +165,21 @@ stateDiagram-v2
 ```mermaid
 stateDiagram-v2
     [*] --> draft: Post created
-    draft --> in_review: Author submits for approval
-    in_review --> changes_requested: Approver requests changes
-    in_review --> approved: Approver approves
-    in_review --> rejected: Approver rejects
-    changes_requested --> in_review: Author resubmits
-    changes_requested --> draft: Author saves as draft
-    rejected --> draft: Author edits and saves
-    approved --> publishing: Publisher triggers publish
+    draft --> in_review: Content Creator submits for approval
+    in_review --> changes_requested: Company Admin requests changes
+    in_review --> approved: Company Admin approves
+    in_review --> rejected: Company Admin rejects
+    changes_requested --> in_review: Content Creator resubmits
+    changes_requested --> draft: Content Creator saves as draft
+    rejected --> draft: Content Creator edits and saves
+    approved --> publishing: Company Admin triggers publish
     publishing --> published: All media published
     publishing --> failed: Error during publishing
     failed --> publishing: Manual retry
     failed --> draft: Abandon and edit
-    draft --> cancelled: Author cancels
-    in_review --> cancelled: Author withdraws
-    changes_requested --> cancelled: Author withdraws
+    draft --> cancelled: Content Creator cancels
+    in_review --> cancelled: Content Creator withdraws
+    changes_requested --> cancelled: Content Creator withdraws
     published --> [*]
     cancelled --> [*]
 ```
@@ -189,14 +189,14 @@ stateDiagram-v2
 | State | Description | Terminal? |
 |-------|-------------|-----------|
 | `draft` | Being authored; not yet submitted | No |
-| `in_review` | Submitted; awaiting approver decision | No |
-| `changes_requested` | Approver returned post with feedback | No |
+| `in_review` | Submitted; awaiting Company Admin decision | No |
+| `changes_requested` | Company Admin returned post with feedback | No |
 | `approved` | Approved and ready to publish | No |
-| `rejected` | Approver declined the post | No |
+| `rejected` | Company Admin declined the post | No |
 | `publishing` | Actively sending to Telegram | No |
 | `published` | Successfully published to channel | Yes |
 | `failed` | Publishing encountered an error | No |
-| `cancelled` | Abandoned by author | Yes |
+| `cancelled` | Abandoned by Content Creator | Yes |
 
 ---
 
@@ -204,20 +204,20 @@ stateDiagram-v2
 
 | From State | Action | Required Role | Side Effects |
 |------------|--------|---------------|--------------|
-| `draft` | Submit for review | Author, Content Creator | Post → `in_review`; notify approvers |
-| `in_review` | Approve | Approver, Admin, Owner | Post → `approved`; notify author |
-| `in_review` | Request changes | Approver, Admin, Owner | Post → `changes_requested`; notify author |
-| `in_review` | Reject | Approver, Admin, Owner | Post → `rejected`; notify author |
-| `changes_requested` | Resubmit | Author, Content Creator | Post → `in_review`; bump revision |
-| `changes_requested` | Save as draft | Author, Content Creator | Post → `draft` |
-| `changes_requested` | Withdraw | Author | Post → `cancelled` |
-| `approved` | Publish | Author, Publisher, Admin, Owner | Post → `publishing` |
-| `rejected` | Edit and save | Author, Content Creator | Post → `draft`; bump revision |
+| `draft` | Submit for review | Content Creator | Post → `in_review`; notify Company Admins |
+| `in_review` | Approve | Company Admin | Post → `approved`; notify Content Creator |
+| `in_review` | Request changes | Company Admin | Post → `changes_requested`; notify Content Creator |
+| `in_review` | Reject | Company Admin | Post → `rejected`; notify Content Creator |
+| `changes_requested` | Resubmit | Content Creator | Post → `in_review`; bump revision |
+| `changes_requested` | Save as draft | Content Creator | Post → `draft` |
+| `changes_requested` | Withdraw | Content Creator | Post → `cancelled` |
+| `approved` | Publish | Company Admin | Post → `publishing` |
+| `rejected` | Edit and save | Content Creator | Post → `draft`; bump revision |
 | `publishing` | Auto-retry | System | Retry count incremented |
-| `failed` | Manual retry | Author, Publisher, Admin, Owner | Post → `publishing` |
-| `failed` | Abandon | Author, Admin, Owner | Post → `draft` |
+| `failed` | Manual retry | Company Admin | Post → `publishing` |
+| `failed` | Abandon | Company Admin | Post → `draft` |
 
-> **Note:** Approvers cannot approve their own submissions. If a user is both author and approver, a second approver must approve.
+> **Note:** Company Admins cannot approve their own submissions. If a user is both Content Creator and Company Admin, a second Company Admin must approve.
 
 ---
 
@@ -225,7 +225,7 @@ stateDiagram-v2
 
 ```mermaid
 sequenceDiagram
-    participant U as User (Owner/Admin)
+    participant U as User (Company Admin)
     participant MA as Mini App
     participant BE as Backend
     participant TG as Telegram Bot API
@@ -259,7 +259,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant U as Author
+    participant U as Content Creator
     participant MA as Mini App
     participant BE as Backend
     participant AI as Gemini API
@@ -292,7 +292,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant U as Author
+    participant U as Content Creator
     participant MA as Mini App
     participant BE as Backend
     participant IMG as Image Provider (Replicate / Fal / OpenAI / Self-hosted)
@@ -334,7 +334,7 @@ If the primary provider returns a `5xx` or timeout:
 | Event | Action | Stored |
 |-------|--------|--------|
 | Post created | Initial snapshot | `revisions[0]` |
-| Author saves draft | New snapshot | `revisions[n]` |
+| Content Creator saves draft | New snapshot | `revisions[n]` |
 | Submitted for review | Snapshot tagged `submitted` | `revisions[n]` |
 | Changes requested | Snapshot tagged `changes_requested` | `revisions[n]` |
 | Resubmitted | New snapshot tagged `submitted` | `revisions[n+1]` |
@@ -355,7 +355,7 @@ If the primary provider returns a `5xx` or timeout:
 | `created_at` | timestamp | Change timestamp |
 | `label` | text | Snapshot tag (draft, submitted, etc.) |
 
-> Any user with `Author` role or above can view revision history and restore a prior version.
+> Any user with `Content Creator` role or above can view revision history and restore a prior version.
 
 ---
 
@@ -363,28 +363,28 @@ If the primary provider returns a `5xx` or timeout:
 
 ```mermaid
 flowchart TD
-    A[Author finishes post] --> B[Save as Draft]
+    A[Content Creator finishes post] --> B[Save as Draft]
     B --> C[Preview post]
     C --> D{Satisfied?}
     D -- No --> B
     D -- Yes --> E[Submit for Review]
-    E --> F[Approver notified]
-    F --> G[Approver opens post]
+    E --> F[Company Admin notified]
+    F --> G[Company Admin opens post]
     G --> H[View content + media + metadata]
     H --> I{Decision}
     I -- Approve --> J[Post → Approved]
     I -- Request Changes --> K[Add feedback]
     K --> L[Post → Changes Requested]
-    L --> M[Author notified]
-    M --> N[Author edits]
+    L --> M[Content Creator notified]
+    M --> N[Content Creator edits]
     N --> E
     I -- Reject --> O[Add rejection reason]
     O --> P[Post → Rejected]
-    P --> Q[Author notified]
+    P --> Q[Content Creator notified]
     Q --> R{Resubmit?}
     R -- Yes --> N
     R -- No --> S[Post → Cancelled]
-    J --> T[Publisher triggers publish]
+    J --> T[Company Admin triggers publish]
 ```
 
 ---
@@ -393,7 +393,7 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant U as Publisher
+    participant U as Company Admin
     participant MA as Mini App
     participant BE as Backend
     participant TG as Telegram Bot API
