@@ -338,7 +338,7 @@ A tenant workspace. The root of all company-owned data.
 | `country` | `VARCHAR(2)` | | Yes | ISO 3166-1 alpha-2 |
 | `contact_email` | `VARCHAR(255)` | | Yes | |
 | `status` | `VARCHAR(32)` | CHECK in ('pending','active','suspended','rejected','info_requested','cancelled') | No | |
-| `owner_user_id` | `UUID` | FK → users.id | No | The company_owner |
+| `owner_user_id` | `UUID` | FK → users.id | No | The company admin |
 | `created_at` | `TIMESTAMPTZ` | | No | |
 | `updated_at` | `TIMESTAMPTZ` | | No | |
 | `deleted_at` | `TIMESTAMPTZ` | | Yes | Soft delete |
@@ -374,7 +374,7 @@ Join table: which users belong to which companies.
 
 ### 3.5 `roles`
 
-Named role definitions (platform_owner, company_owner, company_admin, creator, approver, publisher, analyst).
+Named role definitions (platform_owner, company_admin, creator).
 
 | Column | Type | Constraints | Nullable | Description |
 |--------|------|-------------|----------|-------------|
