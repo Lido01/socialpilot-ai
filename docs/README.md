@@ -35,6 +35,14 @@ This directory contains the complete system documentation for **SocialPilot AI**
 | Messaging | Telegram Bot API, Telegram Mini Apps |
 | Infrastructure | Docker, Redis (future), Object storage (future) |
 
+### Roles
+
+| Role | Description |
+|------|-------------|
+| Platform Owner | Global platform administration, company registration approval/rejection, and company suspension/reactivation |
+| Company Admin | Company workspace, team management, Telegram channel connections, AI settings, post review and approval, scheduling, publishing, and publishing history |
+| Content Creator | AI content generation, media uploads, draft creation/editing, and submitting posts for admin approval |
+
 ### Key Principles
 
 - **Telegram Mini App First**: Primary interface is inside Telegram, not a standalone website
