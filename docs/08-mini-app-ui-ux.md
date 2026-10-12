@@ -212,7 +212,7 @@ flowchart TD
 | **Components** | `CreationOptionCard`, `RecentDraftCard` |
 | **Data displayed** | Options: Text Post, Image Post, Album Post, AI-Assisted Post. Recent drafts list (last 3). |
 | **User actions** | Select creation type; tap recent draft to resume editing. |
-| **Required permissions** | Author, Content Creator. |
+| **Required permissions** | Content Creator. |
 | **Loading state** | Skeleton cards. |
 | **Empty state** | "No drafts yet" if no recent drafts. |
 | **Error state** | Error banner on draft load failure. |
@@ -233,7 +233,7 @@ flowchart TD
 | **Components** | `FormInput`, `ToneSelector` (chip group), `Slider`, `TextArea`, `GenerateButton`, `GeneratedTextCard`, `RegenerateButton`, `AcceptButton`, `CopyButton` |
 | **Data displayed** | Generated text output, token count, model badge, confidence indicator. |
 | **User actions** | Enter parameters, generate, regenerate, accept into editor, copy to clipboard. |
-| **Required permissions** | Author, Content Creator. |
+| **Required permissions** | Content Creator. |
 | **Loading state** | Generate button shows spinner; skeleton text area while streaming. |
 | **Empty state** | Prompt area with example topic suggestions (chips). |
 | **Error state** | Inline error if brand context missing: "Complete your brand settings first." API errors shown as toast. |
@@ -254,7 +254,7 @@ flowchart TD
 | **Components** | `TextArea`, `AspectRatioSelector` (button group), `CountStepper`, `GenerateButton`, `ImageResultCard`, `SelectButton`, `RegenerateButton`, `ProviderBadge` |
 | **Data displayed** | Generated image thumbnails, provider name badge, generation status per image. |
 | **User actions** | Enter prompt, select ratio (1:1, 16:9, 9:16, 4:3), set count (1–4), generate, select result, regenerate. |
-| **Required permissions** | Author, Content Creator. |
+| **Required permissions** | Content Creator. |
 | **Loading state** | Skeleton image placeholders with shimmer; per-image loading indicator. |
 | **Empty state** | Prompt area with example prompt suggestions. |
 | **Error state** | Per-image error overlay with retry; global error if provider unavailable. |
@@ -296,7 +296,7 @@ flowchart TD
 | **Components** | `FilePickerButton` (uses Telegram `openFilePicker` or native input), `SelectedFileCard`, `RemoveButton`, `UploadProgressBar`, `UploadCompleteToast` |
 | **Data displayed** | File thumbnails, file names, file sizes, upload progress per file. |
 | **User actions** | Open file picker, select multiple files, remove individual files, confirm upload. |
-| **Required permissions** | Author, Content Creator. |
+| **Required permissions** | Content Creator. |
 | **Loading state** | Progress bar per file; disable remove during upload. |
 | **Empty state** | "Select images to upload" placeholder. |
 | **Error state** | Per-file error badge with reason (size, type, signature mismatch); retry option. |
@@ -317,7 +317,7 @@ flowchart TD
 | **Components** | `SelectableMediaGrid`, `SelectionCounter`, `OrderedMediaList`, `DragHandle`, `RemoveButton`, `AddToPostButton` |
 | **Data displayed** | Media thumbnails with selection order badges (1, 2, 3...), drag handle icons. |
 | **User actions** | Tap to select/deselect, drag to reorder, remove from selection, confirm add to post. |
-| **Required permissions** | Author, Content Creator. |
+| **Required permissions** | Content Creator. |
 | **Loading state** | Skeleton grid. |
 | **Empty state** | "No media available" with upload/generate CTAs. |
 | **Error state** | Error banner. |
@@ -338,7 +338,7 @@ flowchart TD
 | **Components** | `MediaStrip`, `CaptionTextArea`, `HashtagInput`, `CTAPicker`, `SaveDraftButton`, `PreviewButton`, `SubmitButton`, `WordCounter`, `MediaAddButton`, `MediaRemoveButton`, `AIMagicButton` |
 | **Data displayed** | Current post content, media items in order, character/word count, revision indicator. |
 | **User actions** | Edit caption, add/remove/reorder media, add hashtags, configure CTA, generate AI text, save draft, preview, submit. |
-| **Required permissions** | Author, Content Creator. |
+| **Required permissions** | Content Creator. |
 | **Loading state** | Skeleton for media strip and text areas. |
 | **Empty state** | "Start writing your post…" placeholder in caption area; "Add media" empty strip. |
 | **Error state** | Autosave failure banner: "Could not auto-save. Retry." |
@@ -359,7 +359,7 @@ flowchart TD
 | **Components** | `PhoneMockup`, `TelegramMessageBubble`, `MediaPreview`, `CaptionPreview`, `CloseButton`, `EditButton`, `SubmitButton` |
 | **Data displayed** | Rendered media (album grid or single), caption with hashtags, CTA button mockup. |
 | **User actions** | Close preview, navigate back to editor, submit for review. |
-| **Required permissions** | Author, Content Creator. |
+| **Required permissions** | Content Creator. |
 | **Loading state** | Skeleton bubble while media URLs resolve. |
 | **Empty state** | "Nothing to preview" if post is completely empty. |
 | **Error state** | Media load failure shows placeholder thumbnail. |
@@ -380,7 +380,7 @@ flowchart TD
 | **Components** | `FilterTabBar`, `PostCard`, `StatusBadge`, `ApproverAvatar`, `EmptyState` |
 | **Data displayed** | Post thumbnails, title/excerpt, submitted by, submission date, status badge, feedback snippet (for changes requested). |
 | **User actions** | Tap card to open Post Details; filter by status. |
-| **Required permissions** | Approver, Admin, Owner (to act); Author (to view own submissions). |
+| **Required permissions** | Company Admin (to act); Content Creator (to view own submissions). |
 | **Loading state** | Skeleton cards. |
 | **Empty state** | "No posts awaiting approval" illustration. |
 | **Error state** | Error banner with retry. |
@@ -401,7 +401,7 @@ flowchart TD
 | **Components** | `PostContent`, `MediaGrid`, `MetadataSection`, `RevisionTimeline`, `RevisionCard`, `RestoreButton`, `ActionButtonGroup` |
 | **Data displayed** | Full caption, media, hashtags, CTA, status, submitter, timestamps; full revision list with author, date, change summary. |
 | **User actions** | View details, restore previous revision, perform approval actions, navigate to editor. |
-| **Required permissions** | Any company member (read); Approver+ for actions. |
+| **Required permissions** | Any company member (read); Company Admin for actions. |
 | **Loading state** | Skeleton for all sections. |
 | **Empty state** | "Post not found" (deleted or inaccessible). |
 | **Error state** | Error banner with retry. |
@@ -443,7 +443,7 @@ flowchart TD
 | **Components** | `ChannelCard`, `ChannelStatusBadge`, `DisconnectButton`, `ConnectButton`, `BotInstructionStep`, `EmptyState` |
 | **Data displayed** | Channel name, Telegram handle, connection status, bot admin status, connected date, post count. |
 | **User actions** | Connect new channel (deep link flow), view instructions, disconnect channel. |
-| **Required permissions** | Owner, Admin. |
+| **Required permissions** | Company Admin. |
 | **Loading state** | Skeleton cards. |
 | **Empty state** | "No channels connected" with illustration and CTA. |
 | **Error state** | Error banner; connection failure shows specific reason. |
@@ -464,7 +464,7 @@ flowchart TD
 | **Components** | `MemberRow`, `RoleBadge`, `InviteButton`, `InvitationCard`, `RevokeButton`, `RemoveMemberButton`, `RoleSelector`, `ResendInviteButton` |
 | **Data displayed** | Member name, Telegram username, role, join date; invitation email/phone, expiry date. |
 | **User actions** | Invite new member, change role, remove member, resend/revoke invitation. |
-| **Required permissions** | Owner, Admin. |
+| **Required permissions** | Company Admin. |
 | **Loading state** | Skeleton rows. |
 | **Empty state** | "No team members yet" for empty companies. |
 | **Error state** | Error banner; per-action error toasts. |
@@ -485,7 +485,7 @@ flowchart TD
 | **Components** | `FormInput`, `TextArea`, `ToneSelector`, `KeywordTagInput`, `ColorPicker`, `LogoUploader`, `SaveButton`, `FormSection` |
 | **Data displayed** | Company name, logo, description, industry, website; brand voice tone, key messaging points, target audience, vocabulary do/don't lists. |
 | **User actions** | Edit any field, upload logo, save changes. |
-| **Required permissions** | Owner, Admin. |
+| **Required permissions** | Company Admin. |
 | **Loading state** | Skeleton fields; Save button spinner. |
 | **Empty state** | N/A (form always visible). |
 | **Error state** | Inline field errors; save failure toast. |
@@ -506,7 +506,7 @@ flowchart TD
 | **Components** | `PlanCard`, `UsageMeter`, `UsageProgressBar`, `UpgradeButton`, `BillingHistoryList`, `LimitWarning` |
 | **Data displayed** | Current plan name, billing period, usage counts vs. limits for each feature, over-limit warnings. |
 | **User actions** | View usage details, upgrade plan, view billing history. |
-| **Required permissions** | Owner, Admin. |
+| **Required permissions** | Company Admin. |
 | **Loading state** | Skeleton for all sections. |
 | **Empty state** | N/A (always shows current plan). |
 | **Error state** | Error banner. |
