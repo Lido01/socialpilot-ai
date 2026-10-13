@@ -89,6 +89,14 @@ class Settings(BaseSettings):
     def parse_media_extensions(cls, v: str) -> str:
         return v
 
+    @field_validator("DATABASE_ECHO")
+    @classmethod
+    def disable_echo_in_production(cls, v: bool, info) -> bool:
+        values = info.data
+        if values.get("APP_ENV") == "production":
+            return False
+        return v
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
