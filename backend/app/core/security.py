@@ -8,6 +8,7 @@ import json
 import logging
 import time
 from typing import Any
+from urllib.parse import parse_qsl
 
 import jwt
 
@@ -81,11 +82,11 @@ def validate_init_data(
     if not init_data or not init_data.strip():
         raise InitDataInvalidError("initData is empty")
 
-    pairs: dict[str, str] = {}
-    for item in init_data.split("&"):
-        if "=" in item:
-            key, _, value = item.partition("=")
-            pairs[key] = value
+    # Parse query string. Values must be URL-decoded (RFC 3986 / qs rules)
+    # because the data_check_string that Telegram signs uses decoded values.
+    pairs: dict[str, str] = {
+        key: value for key, value in parse_qsl(init_data, keep_blank_values=True)
+    }
 
     received_hash = pairs.pop("hash", None)
     if not received_hash:
@@ -147,3 +148,35 @@ def is_platform_owner(telegram_id: int, settings: Settings) -> bool:
         settings.PLATFORM_OWNER_TELEGRAM_ID is not None
         and telegram_id == settings.PLATFORM_OWNER_TELEGRAM_ID
     )
+
+
+def upsert_user_from_telegram(
+    db: "Session",
+    telegram_user: dict[str, Any],
+) -> "User":
+    """Upsert a user from validated Telegram data.
+
+    Creates a new user if not found, or updates existing user's display info.
+    Returns the user record.
+    """
+    from app.models.user import User
+
+    telegram_id = telegram_user["id"]
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+
+    if user:
+        user.username = telegram_user.get("username")
+        user.display_name = f"{telegram_user.get('first_name', '')} {telegram_user.get('last_name', '')}".strip()
+        user.language_code = telegram_user.get("language_code")
+        db.flush()
+    else:
+        user = User(
+            telegram_id=telegram_id,
+            username=telegram_user.get("username"),
+            display_name=f"{telegram_user.get('first_name', '')} {telegram_user.get('last_name', '')}".strip(),
+            language_code=telegram_user.get("language_code"),
+        )
+        db.add(user)
+        db.flush()
+
+    return user

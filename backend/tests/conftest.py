@@ -25,6 +25,56 @@ from app.models import (  # noqa: F401
 )
 
 
+@pytest.fixture(autouse=True)
+def _isolate_environment(monkeypatch) -> None:
+    """Make tests hermetic: ignore the developer's real .env and shell env.
+
+    Without this, Settings() inside unit tests picks up backend/.env
+    (APP_ENV, DEBUG, PLATFORM_OWNER_TELEGRAM_ID, real DATABASE_URL, ...) and
+    produces misleading failures.
+    """
+    for var in [
+        "APP_ENV",
+        "DEBUG",
+        "APP_NAME",
+        "LOG_LEVEL",
+        "LOG_JSON",
+        "DATABASE_URL",
+        "DATABASE_POOL_SIZE",
+        "DATABASE_MAX_OVERFLOW",
+        "DATABASE_POOL_TIMEOUT",
+        "DATABASE_ECHO",
+        "SECRET_KEY",
+        "JWT_ALGORITHM",
+        "JWT_ACCESS_TTL_MINUTES",
+        "JWT_REFRESH_TTL_DAYS",
+        "TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_BOT_USERNAME",
+        "TELEGRAM_INITDATA_MAX_AGE_SECONDS",
+        "TELEGRAM_NONCE_TTL_SECONDS",
+        "GEMINI_API_KEY",
+        "GEMINI_MODEL",
+        "IMAGE_GENERATION_PROVIDER",
+        "MEDIA_STORAGE_ROOT",
+        "MEDIA_SERVE_PATH",
+        "CORS_ORIGINS",
+        "RATE_LIMIT_PER_MINUTE",
+        "PLATFORM_OWNER_TELEGRAM_ID",
+        "COMPANY_REGISTRATION_MODE",
+        "INVITATION_TTL_HOURS",
+        "AUDIT_LOG_RETENTION_DAYS",
+        "SENTRY_DSN",
+        "METRICS_ENABLED",
+    ]:
+        monkeypatch.delenv(var, raising=False)
+
+    monkeypatch.setattr(
+        Settings,
+        "model_config",
+        {**Settings.model_config, "env_file": None},
+    )
+
+
 @pytest.fixture()
 def test_settings() -> Settings:
     return Settings(
@@ -67,17 +117,38 @@ def db_session(db_engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture()
-def client(test_settings: Settings, db_session: Session) -> Generator[TestClient, None, None]:
+def client(
+    test_settings: Settings,
+    db_session: Session,
+    db_engine,
+) -> Generator[TestClient, None, None]:
+    import app.core.deps as deps_module
     from app.core.config import get_settings
-    from app.db.session import get_db
+    from app.db.session import get_db as session_get_db
+    from app.main import app
+
+    # Endpoints resolve their session two ways:
+    # 1. Route signature `Depends(get_db)` -> dependency_overrides applies.
+    # 2. Nested lookups inside get_current_user*, which captured SessionLocal
+    #    at import time -> patch the module attribute instead.
+    TestSessionLocal = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=db_engine,
+    )
 
     app.dependency_overrides[get_settings] = lambda: test_settings
-    app.dependency_overrides[get_db] = lambda: db_session
+    app.dependency_overrides[deps_module.get_db] = lambda: db_session
+    app.dependency_overrides[session_get_db] = lambda: db_session
 
-    with TestClient(app) as test_client:
-        yield test_client
-
-    app.dependency_overrides.clear()
+    original_session_local = deps_module.SessionLocal
+    deps_module.SessionLocal = TestSessionLocal
+    try:
+        with TestClient(app) as test_client:
+            yield test_client
+    finally:
+        deps_module.SessionLocal = original_session_local
+        app.dependency_overrides.clear()
 
 
 @pytest.fixture()

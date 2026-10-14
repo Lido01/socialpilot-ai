@@ -11,16 +11,20 @@ from sqlalchemy import engine_from_config, pool
 from app.core.config import get_settings
 from app.db.base import Base
 from app.models import (  # noqa: F401
+    AuditLog,
     Company,
     CompanyMembership,
     CompanyRegistrationRequest,
+    CompanyStatus,
+    MembershipRole,
+    RegistrationStatus,
     User,
 )
 
 config = context.config
 
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

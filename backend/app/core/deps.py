@@ -9,11 +9,12 @@ from fastapi import Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
-from app.core.exceptions import AuthenticationError, ResourceNotFoundError
+from app.core.exceptions import AuthenticationError, PermissionDeniedError, ResourceNotFoundError
+from app.core.rbac import Permission, Role, get_permissions_for_role
 from app.core.security import decode_access_token, is_platform_owner
 from app.db.session import SessionLocal
 from app.models.company import Company
-from app.models.company_membership import CompanyMembership
+from app.models.company_membership import CompanyMembership, MembershipRole
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -94,3 +95,33 @@ def get_platform_owner(
     if not is_platform_owner(current_user.telegram_id, settings):
         raise AuthenticationError("Platform owner access required")
     return current_user
+
+
+def require_permission(permission: Permission):
+    """Dependency factory that enforces a specific permission for company-scoped operations."""
+
+    def dependency(
+        current_user: User = Depends(get_current_user),
+        current_membership: CompanyMembership = Depends(require_company_membership),
+    ) -> None:
+        role = Role(current_membership.role)
+        permissions = get_permissions_for_role(role)
+
+        if permission not in permissions:
+            raise PermissionDeniedError(
+                f"Role '{role.value}' does not have permission '{permission.value}'"
+            )
+
+    return dependency
+
+
+def get_current_membership_for_company(company_id: str):
+    """Dependency factory that returns the current user's membership for a specific company."""
+
+    def dependency(
+        current_user: User = Depends(get_current_user),
+        db: Session = Depends(get_db),
+    ) -> CompanyMembership:
+        return require_company_membership(company_id, current_user, db)
+
+    return dependency

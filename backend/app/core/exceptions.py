@@ -56,11 +56,16 @@ class ResourceNotFoundError(AppException):
 
 
 class ConflictError(AppException):
-    def __init__(self, message: str = "Resource conflict") -> None:
+    def __init__(
+        self,
+        message: str = "Resource conflict",
+        details: list[dict] | None = None,
+    ) -> None:
         super().__init__(
             status_code=status.HTTP_409_CONFLICT,
             code="CONFLICT",
             message=message,
+            details=details,
         )
 
 
