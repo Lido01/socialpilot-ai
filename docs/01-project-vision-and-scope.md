@@ -11,12 +11,8 @@ The platform owner operates the service, controls company admissions, manages su
 | User Type | Description |
 |-----------|-------------|
 | **Platform Owner** | Operates the SaaS; approves/rejects companies; manages plans and system settings |
-| **Company Owner** | Registers the company; configures brand, channels, team; full workspace control |
-| **Company Admin** | Manages workspace per assigned permissions; cannot approve companies |
-| **Content Creator** | Generates content, uploads media, edits drafts, submits for approval |
-| **Content Approver** | Reviews, edits, approves, or rejects submitted content |
-| **Publisher** | Publishes approved content to connected channels |
-| **Analyst/Viewer** | Views reports, history, and analytics without modifying content |
+| **Company Admin** | Registers the company; manages workspace, team, channels, AI settings, approvals, publishing, and history |
+| **Content Creator** | Generates AI content, uploads media, creates/edits drafts, submits for approval |
 
 ## Core Value Propositions
 

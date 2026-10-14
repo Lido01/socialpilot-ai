@@ -96,7 +96,7 @@ Note the two parallel tracks after Phase 1: backend-heavy work (Phase 2) and fro
 - Alembic initialized and wired (`env.py` reads `DATABASE_URL`, imports all models); first migration creates the core tables.
 - Telegram `initData` validation service: HMAC-SHA256 verification using the bot token, constant-time comparison, `auth_date` freshness window, single-use nonce replay cache (ADR-004).
 - Auth endpoints: `POST /api/v1/auth/login` (initData → access + refresh JWT pair) and token refresh; JWT dependencies for the FastAPI app.
-- Platform-owner bootstrap from `PLATFORM_OWNER_TELEGRAM_ID`; company-owner special-casing (ADR-014).
+- Platform-owner bootstrap from `PLATFORM_OWNER_TELEGRAM_ID`; company-admin special-casing (ADR-014).
 - Health endpoints (`/healthz`, `/readyz`) and the standard error format (see [06-api-specification.md](06-api-specification.md)).
 
 **Dependencies:** Phase 0; local PostgreSQL running.
@@ -120,10 +120,10 @@ Note the two parallel tracks after Phase 1: backend-heavy work (Phase 2) and fro
 
 **Deliverables**
 
-- Company registration flow (Mini App entry point): creates a `pending` company with the registrant as `company_owner`.
+- Company registration flow (Mini App entry point): creates a `pending` company with the registrant as Company Admin.
 - Platform-owner approval/rejection endpoints and notifications surface (bot message is enough for MVP).
 - Team invitations: creator-generated, expiring (TTL from `INVITATION_TTL_HOURS`), single-use; membership accept flow.
-- Role management endpoints constrained by permission (`member:invite`, `member:role:update`, `member:remove`) with the owner-immutability rule.
+- Role management endpoints constrained by permission (`member:invite`, `member:role:update`, `member:remove`) with the admin-immutability rule.
 - RBAC dependency: `require_permission("resource:action")` wired to the permission catalog from [03-user-roles-and-use-cases.md](03-user-roles-and-use-cases.md); company context resolved from the authenticated membership.
 - Brand profile CRUD (Phase 2 ships storage; AI consumes it from Phase 5).
 - Tenant isolation middleware/dependency: every tenant-scoped query is filtered by the authenticated company id (ADR-005).
@@ -262,7 +262,7 @@ Note the two parallel tracks after Phase 1: backend-heavy work (Phase 2) and fro
 **Deliverables**
 
 - Post status state machine: `Draft → In Review → Approved`, plus `Changes Requested` and `Rejected` branches (states per [01-project-vision-and-scope.md](01-project-vision-and-scope.md) and [07-user-flows-and-state-machines.md](07-user-flows-and-state-machines.md)).
-- Transition service enforcing permissions per transition (`approval:submit`, `approval:review`) and role rules (creators cannot approve their own posts — owner-configurable exception noted as post-MVP).
+- Transition service enforcing permissions per transition (`approval:submit`, `approval:review`) and role rules (content creators cannot approve their own posts — admin-configurable exception noted as post-MVP).
 - Review queue screen: pending posts with filters, reviewer actions (approve / request changes with comment / reject with comment), transition history visible on the post.
 - Revision creation on every edit so reviewers diff against the submitted version.
 - Comments thread on the post for reviewer/creator exchange (in-app; Telegram push in Phase 10).
@@ -274,7 +274,7 @@ Note the two parallel tracks after Phase 1: backend-heavy work (Phase 2) and fro
 **Test requirements:**
 
 - Transition matrix test: every legal transition succeeds with the right role; every illegal transition (wrong role, wrong current state) is rejected with a clear error (state machine as test oracle from the user-flows doc).
-- Self-approval prevention; owner override behavior matches the company configuration.
+- Self-approval prevention; admin override behavior matches the company configuration.
 - Concurrent review: two reviewers acting on the same post result in exactly one winner (optimistic concurrency).
 - Queue reflects state changes immediately.
 
@@ -302,7 +302,7 @@ Note the two parallel tracks after Phase 1: backend-heavy work (Phase 2) and fro
 
 - Fake publisher (no Telegram calls): album splitting at 10 items, caption truncation, status transitions for success/failure paths, idempotency (same key twice → one publication).
 - History records message IDs exactly as returned.
-- Permission tests: publisher role can publish; creator cannot; approver-without-publish permission cannot.
+- Permission tests: company admin can publish; content creator cannot.
 - End-to-end smoke (marked `slow`, real bot + test channel): publish a text post and a 3-image album; verify in the channel.
 
 **Milestone M8:** an approved post appears in the connected channel, and the history shows it with message IDs.

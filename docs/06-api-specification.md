@@ -152,7 +152,7 @@ All errors return a consistent envelope:
       "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
       "name": "Acme Corp",
       "status": "active",
-      "roles": ["company_owner"]
+      "roles": ["company_admin"]
     }
   ]
 }
@@ -192,7 +192,7 @@ All errors return a consistent envelope:
       "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
       "name": "Acme Corp",
       "status": "active",
-      "roles": ["company_owner"],
+      "roles": ["company_admin"],
       "permissions": ["company:view", "company:update", "..."]
     }
   ]
@@ -240,7 +240,7 @@ All errors return a consistent envelope:
 
 ### 4.1 `POST /companies` — Register a New Company
 
-**Purpose:** Create a new company workspace in `pending` status. The requesting user becomes `company_owner`.
+**Purpose:** Create a new company workspace in `pending` status. The requesting user becomes `company_admin`.
 
 **Permission:** Authenticated (any user with no active company).
 
@@ -454,14 +454,14 @@ All errors return a consistent envelope:
       "userId": "550e8400-e29b-41d4-a716-446655440000",
       "displayName": "John Doe",
       "username": "johndoe",
-      "roles": ["company_owner"],
+      "roles": ["company_admin"],
       "joinedAt": "2026-10-01T10:00:00Z"
     },
     {
       "userId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
       "displayName": "Jane Smith",
       "username": "janesmith",
-      "roles": ["creator", "publisher"],
+      "roles": ["company_admin"],
       "joinedAt": "2026-10-05T14:30:00Z"
     }
   ],
@@ -484,7 +484,7 @@ All errors return a consistent envelope:
 ```json
 {
   "telegramUsername": "janesmith",
-  "roleIds": ["role-creator-uuid", "role-publisher-uuid"]
+  "roleIds": ["role-company-admin-uuid"]
 }
 ```
 
@@ -537,7 +537,7 @@ All errors return a consistent envelope:
     "id": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
     "name": "Acme Corp"
   },
-  "roles": ["creator", "publisher"]
+  "roles": ["company_admin"]
 }
 ```
 
@@ -575,7 +575,7 @@ All errors return a consistent envelope:
 
 ```json
 {
-  "roleIds": ["role-creator-uuid", "role-approver-uuid"]
+  "roleIds": ["role-company-admin-uuid"]
 }
 ```
 
@@ -584,7 +584,7 @@ All errors return a consistent envelope:
 ```json
 {
   "userId": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
-  "roles": ["creator", "approver"]
+  "roles": ["company_admin"]
 }
 ```
 
@@ -892,7 +892,7 @@ All errors return a consistent envelope:
 
 **Purpose:** Edit caption, hashtags, CTA, or media. Creates a new revision.
 
-**Permission:** `post:update` (own drafts for creator; any post for owner/admin/approver)
+**Permission:** `post:update` (own drafts for Content Creator; any post for Company Admin)
 
 **Tenant scoping:** Post's company must match user's membership.
 
@@ -1078,7 +1078,7 @@ All errors return a consistent envelope:
 
 **Purpose:** Soft-delete a media asset. Hard delete after 30 days.
 
-**Permission:** `media:delete` (own uploads for creator; any for owner/admin)
+**Permission:** `media:delete` (own uploads for Content Creator; any for Company Admin)
 
 **Tenant scoping:** Media's company must match user's membership.
 
@@ -1289,7 +1289,7 @@ All errors return a consistent envelope:
 |--------|------|-----------|
 | 403 | `FORBIDDEN` | User lacks `approval:review` |
 | 409 | `CONFLICT` | Post is not `in_review` |
-| 409 | `CONFLICT` | Approver is the sole author and policy requires separation |
+| 409 | `CONFLICT` | Company Admin is the sole author and policy requires separation |
 
 ---
 
@@ -1633,7 +1633,7 @@ All errors return a consistent envelope:
 
 ## 13. Owner Admin
 
-All endpoints in this group require `platform_owner` role. The platform owner has no company membership; authorization is checked via the `platform_*` permission set.
+All endpoints in this group require `Platform Owner` role. The Platform Owner has no company membership; authorization is checked via the `platform_*` permission set.
 
 ### 13.1 `GET /owner-admin/companies` — List All Companies
 
@@ -1702,7 +1702,7 @@ All endpoints in this group require `platform_owner` role. The platform owner ha
   "contactEmail": "owner@acme.example.com",
   "owner": { "id": "user-uuid", "displayName": "John Doe", "username": "johndoe" },
   "members": [
-    { "id": "user-uuid", "displayName": "John Doe", "roles": ["company_owner"] }
+    { "id": "user-uuid", "displayName": "John Doe", "roles": ["company_admin"] }
   ],
   "channels": [
     { "id": "chan-uuid", "title": "Acme Official", "status": "active" }

@@ -362,7 +362,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant C as Creator
+    participant C as Content Creator
     participant API as FastAPI
     participant S as AIService
     participant G as Gemini
@@ -386,24 +386,24 @@ sequenceDiagram
 
 ```mermaid
 stateDiagram-v2
-    [*] --> draft: Creator saves
-    draft --> in_review: Creator submits
-    in_review --> approved: Approver approves
-    in_review --> changes_requested: Approver requests changes (reason)
-    in_review --> rejected: Approver rejects (reason)
-    changes_requested --> in_review: Creator edits + resubmits
-    approved --> publishing: Publisher initiates
+    [*] --> draft: Content Creator saves
+    draft --> in_review: Content Creator submits
+    in_review --> approved: Company Admin approves
+    in_review --> changes_requested: Company Admin requests changes (reason)
+    in_review --> rejected: Company Admin rejects (reason)
+    changes_requested --> in_review: Content Creator edits + resubmits
+    approved --> publishing: Company Admin initiates
     publishing --> published: Telegram success
     publishing --> approved: Telegram failure (retryable)
     rejected --> [*]
-    draft --> cancelled: Creator cancels
+    draft --> cancelled: Content Creator cancels
 ```
 
 ### 6.4 Publishing
 
 ```mermaid
 sequenceDiagram
-    participant P as Publisher
+    participant P as Company Admin
     participant API as FastAPI
     participant S as PublishingService
     participant T as Telegram Bot API

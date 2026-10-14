@@ -224,7 +224,7 @@ Every generation is logged to the `image_usage_logs` table with the same pattern
 
 ```mermaid
 sequenceDiagram
-    participant U as Author
+    participant U as Content Creator
     participant MA as Mini App
     participant BE as Backend
     participant IMG as Image Provider
@@ -408,7 +408,7 @@ If the magic bytes do not match the declared MIME type, the file is rejected wit
 ### Authorization
 
 - Upload endpoint requires valid `initData` session
-- User must have `Author` role or above in the target company
+- User must have `Content Creator` role or above in the target company
 - Company must be in `active` state
 
 ### Never Trust Extensions
@@ -582,11 +582,8 @@ Files in `quarantine/` are:
 
 | Role | Can Submit |
 |------|-----------|
-| Author | Own posts |
 | Content Creator | Own posts |
-| Approver | Own posts (not for own approval) |
-| Admin | Any post in company |
-| Owner | Any post in company |
+| Company Admin | Any post in company |
 
 Submit action:
 1. Validates all fields (caption length, media count, CTA format)

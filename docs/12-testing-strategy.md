@@ -161,16 +161,12 @@ markers =
 
 | Fixture | Scope | Description |
 |---------|-------|-------------|
-| `test_company` | Function | Creates an active company with owner membership |
+| `test_company` | Function | Creates an active company with admin membership |
 | `test_company_2` | Function | Second company for cross-tenant tests |
 | `pending_company` | Function | Company in `pending` status |
 | `suspended_company` | Function | Company in `suspended` status |
-| `company_owner_membership` | Function | Owner membership for test user in test company |
-| `company_admin_membership` | Function | Admin membership |
-| `creator_membership` | Function | Creator membership |
-| `approver_membership` | Function | Approver membership |
-| `publisher_membership` | Function | Publisher membership |
-| `analyst_membership` | Function | Analyst membership |
+| `company_admin_membership` | Function | Company Admin membership for test user in test company |
+| `content_creator_membership` | Function | Content Creator membership |
 
 ### 4.4 Telegram Mock Fixtures
 
@@ -261,12 +257,12 @@ markers =
 | INV-01 | Owner invites by username | Active company; owner session | POST /companies/{id}/invitations | 201; invitation created | MVP |
 | INV-02 | Invite expires after 7 days | Invitation created 8 days ago | Accept invitation | 410; INVITATION_EXPIRED | MVP |
 | INV-03 | Invited user accepts | Valid invitation; invited user session | POST /invitations/{id}/accept | 200; membership created | MVP |
-| INV-04 | Invitee gets specified roles | Invitation with roles [creator, publisher] | Accept invitation | Membership has both roles | MVP |
+| INV-04 | Invitee gets specified role | Invitation with role [content_creator] | Accept invitation | Membership has the role | MVP |
 | INV-05 | Non-invitee cannot accept | Different user session | POST /invitations/{id}/accept | 403; PERMISSION_DENIED | MVP |
-| INV-06 | Owner changes member roles | Existing membership | PATCH /memberships/{id}/roles | 200; roles updated; audit logged | MVP |
-| INV-07 | Admin cannot assign admin role | Admin session; target is creator | PATCH roles to [admin] | 403; PERMISSION_DENIED | MVP |
-| INV-08 | Remove member | Owner session; target is creator | DELETE /memberships/{id} | 204; membership removed | MVP |
-| INV-09 | Cannot remove last owner | Owner session; only owner | DELETE /memberships/{id} | 409; LAST_OWNER | MVP |
+| INV-06 | Admin changes member role | Existing membership | PATCH /memberships/{id}/roles | 200; role updated; audit logged | MVP |
+| INV-07 | Admin cannot assign admin role | Admin session; target is content_creator | PATCH roles to [company_admin] | 403; PERMISSION_DENIED | MVP |
+| INV-08 | Remove member | Admin session; target is content_creator | DELETE /memberships/{id} | 204; membership removed | MVP |
+| INV-09 | Cannot remove last admin | Admin session; only admin | DELETE /memberships/{id} | 409; LAST_ADMIN | MVP |
 | INV-10 | Revoke unaccepted invitation | Owner session; pending invitation | DELETE /invitations/{id} | 204; invitation revoked | MVP |
 
 ### 5.5 Cross-Tenant Access-Denial Tests
@@ -293,7 +289,7 @@ markers =
 | CHN-03 | Connect already-connected channel | Channel belongs to another company | POST /channels/connect | 409; CHANNEL_ALREADY_CONNECTED | MVP |
 | CHN-04 | Connect channel to own company | Channel already connected to same company | POST /channels/connect | 409; CHANNEL_ALREADY_CONNECTED | MVP |
 | CHN-05 | Disconnect channel | Owner session; channel exists | DELETE /channels/{id} | 204; channel disconnected | MVP |
-| CHN-06 | Non-owner cannot connect | Creator session | POST /channels/connect | 403; PERMISSION_DENIED | MVP |
+| CHN-06 | Non-admin cannot connect | Content creator session | POST /channels/connect | 403; PERMISSION_DENIED | MVP |
 | CHN-07 | Bot loses admin after connection | Bot removed from channel | GET /channels/{id} | Channel shows warning status | MVP |
 | CHN-08 | getChat returns not found | Invalid channel ID | POST /channels/connect | 400; TELEGRAM_CHAT_NOT_FOUND | MVP |
 
@@ -301,14 +297,14 @@ markers =
 
 | ID | Test Case | Given | When | Then | Priority |
 |----|-----------|-------|------|------|----------|
-| DFT-01 | Create draft | Creator session; company active | POST /posts | 201; post in draft state | MVP |
-| DFT-02 | Edit draft caption | Draft exists; creator session | PATCH /posts/{id} | 200; revision created | MVP |
+| DFT-01 | Create draft | Content Creator session; company active | POST /posts | 201; post in draft state | MVP |
+| DFT-02 | Edit draft caption | Draft exists; content creator session | PATCH /posts/{id} | 200; revision created | MVP |
 | DFT-03 | Edit non-draft post | Post in approved state | PATCH /posts/{id} | 409; INVALID_STATE | MVP |
-| DFT-04 | Delete (cancel) draft | Draft exists; creator session | DELETE /posts/{id} | 204; post cancelled | MVP |
+| DFT-04 | Delete (cancel) draft | Draft exists; content creator session | DELETE /posts/{id} | 204; post cancelled | MVP |
 | DFT-05 | View draft revisions | Draft with 3 revisions | GET /posts/{id}/revisions | 200; 3 revisions returned | MVP |
 | DFT-06 | List drafts with filters | Multiple drafts | GET /posts?status=draft | 200; filtered results | MVP |
-| DFT-07 | Creator edits own draft | Creator session; own draft | PATCH /posts/{id} | 200 | MVP |
-| DFT-08 | Creator cannot edit others' draft | Creator session; other's draft | PATCH /posts/{id} | 403; PERMISSION_DENIED | MVP |
+| DFT-07 | Creator edits own draft | Content creator session; own draft | PATCH /posts/{id} | 200 | MVP |
+| DFT-08 | Creator cannot edit others' draft | Content creator session; other's draft | PATCH /posts/{id} | 403; PERMISSION_DENIED | MVP |
 | DFT-09 | Empty caption rejected | Draft with no caption | POST /posts | 422; VALIDATION_ERROR | MVP |
 | DFT-10 | Caption max length | Caption > 2000 chars | POST /posts | 422; VALIDATION_ERROR | MVP |
 
@@ -371,13 +367,13 @@ markers =
 
 | ID | Test Case | Given | When | Then | Priority |
 |----|-----------|-------|------|------|----------|
-| APR-01 | Submit for review | Draft; creator session | POST /posts/{id}/submit | 200; post in_review | MVP |
-| APR-02 | Approve post | In review; approver session | POST /posts/{id}/approve | 200; post approved | MVP |
-| APR-03 | Reject post with reason | In review; approver session | POST /posts/{id}/reject | 200; post rejected; reason recorded | MVP |
-| APR-04 | Reject without reason | In review; approver session | POST /posts/{id}/reject (no reason) | 422; VALIDATION_ERROR | MVP |
-| APR-05 | Request changes | In review; approver session | POST /posts/{id}/request-changes | 200; post changes_requested | MVP |
-| APR-06 | Resubmit after changes | Changes requested; creator session | POST /posts/{id}/submit | 200; post in_review | MVP |
-| APR-07 | Cannot approve own post (policy on) | Creator = approver; policy requires separation | POST /posts/{id}/approve | 403; SEPARATION_OF_DUTIES | MVP |
+| APR-01 | Submit for review | Draft; content creator session | POST /posts/{id}/submit | 200; post in_review | MVP |
+| APR-02 | Approve post | In review; company admin session | POST /posts/{id}/approve | 200; post approved | MVP |
+| APR-03 | Reject post with reason | In review; company admin session | POST /posts/{id}/reject | 200; post rejected; reason recorded | MVP |
+| APR-04 | Reject without reason | In review; company admin session | POST /posts/{id}/reject (no reason) | 422; VALIDATION_ERROR | MVP |
+| APR-05 | Request changes | In review; company admin session | POST /posts/{id}/request-changes | 200; post changes_requested | MVP |
+| APR-06 | Resubmit after changes | Changes requested; content creator session | POST /posts/{id}/submit | 200; post in_review | MVP |
+| APR-07 | Cannot approve own post (policy on) | Content creator = approver; policy requires separation | POST /posts/{id}/approve | 403; SEPARATION_OF_DUTIES | MVP |
 | APR-08 | Cannot submit non-draft | Post in approved state | POST /posts/{id}/submit | 409; INVALID_STATE | MVP |
 | APR-09 | Approval event recorded | Any approval action | POST /posts/{id}/approve | approval_event created | MVP |
 | APR-10 | Rejected post cannot publish | Post in rejected state | POST /posts/{id}/publish | 409; INVALID_STATE | MVP |
@@ -413,11 +409,11 @@ markers =
 |----|-----------|-------|------|------|----------|
 | SUS-01 | Platform owner suspends | Active company; platform owner session | POST /platform/companies/{id}/suspend | 200; company suspended | MVP |
 | SUS-02 | Suspended company read-only | Suspended company; member session | POST /posts | 403; COMPANY_SUSPENDED | MVP |
-| SUS-03 | Suspended company cannot publish | Suspended company; publisher session | POST /posts/{id}/publish | 403; COMPANY_SUSPENDED | MVP |
+| SUS-03 | Suspended company cannot publish | Suspended company; company admin session | POST /posts/{id}/publish | 403; COMPANY_SUSPENDED | MVP |
 | SUS-04 | Suspended company can view | Suspended company; member session | GET /posts | 200; read-only access | MVP |
 | SUS-05 | Platform owner reactivates | Suspended company; platform owner session | POST /platform/companies/{id}/activate | 200; company active | MVP |
-| SUS-06 | Owner self-suspends | Active company; owner session | POST /companies/{id}/suspend | 200; company suspended | MVP |
-| SUS-07 | Non-owner cannot suspend | Admin session | POST /companies/{id}/suspend | 403; PERMISSION_DENIED | MVP |
+| SUS-06 | Admin self-suspends | Active company; admin session | POST /companies/{id}/suspend | 200; company suspended | MVP |
+| SUS-07 | Non-admin cannot suspend | Content creator session | POST /companies/{id}/suspend | 403; PERMISSION_DENIED | MVP |
 | SUS-08 | Suspension audit logged | Any suspension action | POST /platform/companies/{id}/suspend | Audit log entry created | MVP |
 
 ### 5.16 Subscription and Usage-Limit Tests

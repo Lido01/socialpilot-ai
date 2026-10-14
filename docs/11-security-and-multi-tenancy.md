@@ -13,7 +13,7 @@ This document defines the security model for SocialPilot AI. Security is not a f
 | Stolen initData blob | **Spoofing** | Attacker captures valid `initData` from a victim's session and replays it | HMAC validation + `auth_date` expiration + replay cache (Section 3) |
 | Stolen JWT | **Spoofing** | Attacker steals JWT from XSS or network sniffing | HTTPS-only; short expiry (12h); in-memory storage; no refresh token persistence |
 | Cross-tenant data access | **Tampering** | Attacker modifies `company_id` in API requests to access another company's data | Tenant isolation (Section 6): `company_id` derived from resource ownership, never trusted from client |
-| Privilege escalation | **Elevation of Privilege** | Attacker assigns themselves `company_owner` or `platform_owner` role | RBAC enforcement in FastAPI dependencies (Section 5); server-side role validation |
+| Privilege escalation | **Elevation of Privilege** | Attacker assigns themselves `company_admin` or `platform_owner` role | RBAC enforcement in FastAPI dependencies (Section 5); server-side role validation |
 | Unauthorized channel connection | **Tampering** | Attacker connects a victim's channel to their own company | Bot admin verification + one-channel-one-company rule (Section 5.3 in [10-telegram-integration.md](10-telegram-integration.md)) |
 | Repudiation | **Repudiation** | User denies performing an action (publishing, approving, deleting) | Audit logging (Section 11): every sensitive action recorded with actor, timestamp, IP |
 | Data leakage via error messages | **Information Disclosure** | Raw provider errors or stack traces exposed to client | Provider error sanitization (Section 14); generic error responses |
@@ -190,10 +190,16 @@ require_auth → require_company(company_id) → require_permission("resource:ac
 
 ### 5.2 Permission Resolution
 
-Permissions are resolved from the user's role(s) in the **target company**:
+Permissions are resolved from the user's role(s) in the **target company**. The system defines exactly three roles:
+
+1. **Platform Owner** — global platform administration (company registration approval/rejection, suspension/reactivation)
+2. **Company Admin** — company workspace, team management, channel connections, AI settings, post review/approval, scheduling, publishing, and publishing history
+3. **Content Creator** — AI content generation, media uploads, draft creation/editing, and submitting posts for admin approval
+
+The resolution algorithm:
 
 1. Load `company_memberships` for `(user_id, company_id)`.
-2. Collect all permission strings from all assigned roles.
+2. Collect all permission strings from the user's assigned role.
 3. Check if the required permission is in the resolved set.
 4. If not: return `403` with code `PERMISSION_DENIED`.
 
@@ -213,12 +219,9 @@ The platform owner has **no implicit company membership** and cannot access comp
 
 | Role | Can Manage |
 |------|------------|
-| `company_owner` | All roles in their company |
-| `company_admin` | `creator`, `approver`, `publisher`, `analyst` (not other admins or owner) |
-| `creator` | No management |
-| `approver` | No management |
-| `publisher` | No management |
-| `analyst` | No management |
+| `company_admin` | `content_creator` (not other admins) |
+| `content_creator` | No management |
+| `platform_owner` | All companies at the platform level (not a company role) |
 
 ---
 
@@ -613,7 +616,7 @@ Full provider error details (including response body) are logged server-side wit
 | Table | `audit_logs` (PostgreSQL) |
 | Retention | 12 months |
 | Immutability | Append-only; no UPDATE or DELETE grants |
-| Access | Platform owner and `company_owner`/`company_admin` (own company only) |
+| Access | Platform owner and `company_admin` (own company only) |
 
 ### 15.3 Audit Log Schema
 
@@ -677,10 +680,10 @@ Full provider error details (including response body) are logged server-side wit
 
 | Status | Workspace Access | Data | Publishing |
 |--------|-----------------|------|------------|
-| `pending` | Owner can view; no workspace features | Retained | No |
+| `pending` | Company Admin can view; no workspace features | Retained | No |
 | `active` | Full access | Retained | Yes |
 | `suspended` | Read-only for members | Retained | No; API returns `403 COMPANY_SUSPENDED` |
-| `rejected` | Owner can view rejection reason | Retained | No; re-registration allowed after 7 days |
+| `rejected` | Company Admin can view rejection reason | Retained | No; re-registration allowed after 7 days |
 
 ### 17.2 Platform Owner Suspension
 
@@ -690,12 +693,12 @@ Full provider error details (including response body) are logged server-side wit
 | Platform owner reactivates company | Company → `active`; full functionality restored |
 | Platform owner deletes company | Export archive → 24h retention → hard-delete cascade |
 
-### 17.3 Owner-Initiated Self-Suspension
+### 17.3 Admin-Initiated Self-Suspension
 
 | Action | Effect |
 |--------|--------|
-| Company owner self-suspends | Company → `suspended`; reversible by owner |
-| Owner reactivates | Company → `active`; no platform owner approval needed |
+| Company Admin self-suspends | Company → `suspended`; reversible by admin |
+| Admin reactivates | Company → `active`; no platform owner approval needed |
 
 ### 17.4 User Deactivation
 

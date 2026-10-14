@@ -519,11 +519,11 @@ When sustained signup demand makes the owner the bottleneck, or when monetizatio
 
 ### Context
 
-The product defines six company roles (owner, admin, creator, approver, publisher, analyst) plus the platform owner, and role needs evolve per company and over time (e.g., "approvers may also edit captions" is a configuration question, not a role question). Pure role-name checks (`if user.role == "approver"`) freeze that flexibility into code and make every new rule a deploy. Pure attribute-based access control is over-engineered for a known, small role set.
+The product defines exactly three roles — Platform Owner, Company Admin, and Content Creator — and role needs evolve per company and over time (e.g., "admins may also edit captions" is a configuration question, not a role question). Pure role-name checks (`if user.role == "content_creator"`) freeze that flexibility into code and make every new rule a deploy. Pure attribute-based access control is over-engineered for a known, small role set.
 
 ### Decision
 
-Implement **RBAC with explicit permissions**: permissions are `resource:action` strings (e.g., `post:update`, `approval:review`, `platform:company:approve`); roles are named bundles of permissions; authorization is enforced by a FastAPI dependency that resolves the authenticated user's company role(s) and checks the required permission. The permission catalog in [03-user-roles-and-use-cases.md](03-user-roles-and-use-cases.md) is the source of truth and the test oracle. Platform-plane permissions (`platform:*`) are checked separately from company membership — the platform owner has no implicit company access. Sensitive actions are audit-logged.
+Implement **RBAC with explicit permissions**: permissions are `resource:action` strings (e.g., `post:update`, `approval:review`, `platform:company:approve`); roles are named bundles of permissions; authorization is enforced by a FastAPI dependency that resolves the authenticated user's company role and checks the required permission. The permission catalog in [03-user-roles-and-use-cases.md](03-user-roles-and-use-cases.md) is the source of truth and the test oracle. Platform-plane permissions (`platform:*`) are checked separately from company membership — the platform owner has no implicit company access. Sensitive actions are audit-logged.
 
 ### Alternatives Considered
 
@@ -538,7 +538,7 @@ Implement **RBAC with explicit permissions**: permissions are `resource:action` 
 
 - **Positive:** authorization rules are data (the catalog), reviewable in one table, testable as a matrix, and changeable by configuration; audit logging attaches to explicit actions; new roles are new bundles, not new code.
 - **Negative:** permission sprawl risk — the catalog must stay deliberately curated; developers must look up permissions instead of reading role names (mitigated by the catalog as a first-class doc); two-layer (company + platform) checks add a small amount of boilerplate.
-- **Neutral:** the `analyst` role and read-only permissions demonstrate the model's granularity from day one.
+- **Neutral:** the three-role model keeps the permission surface small and auditable from day one.
 
 ### When to Revisit
 
