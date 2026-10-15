@@ -13,7 +13,7 @@ from app.core.exceptions import AuthenticationError, PermissionDeniedError, Reso
 from app.core.rbac import Permission, Role, get_permissions_for_role
 from app.core.security import decode_access_token, is_platform_owner
 from app.db.session import SessionLocal
-from app.models.company import Company
+from app.models.company import Company, CompanyStatus
 from app.models.company_membership import CompanyMembership, MembershipRole
 from app.models.user import User
 
@@ -75,10 +75,12 @@ def require_company_membership(
     """Require an active membership in the specified company."""
     membership = (
         db.query(CompanyMembership)
+        .join(Company, CompanyMembership.company_id == Company.id)
         .filter(
             CompanyMembership.company_id == company_id,
             CompanyMembership.user_id == current_user.id,
             CompanyMembership.is_active == True,
+            Company.status == CompanyStatus.ACTIVE,
         )
         .first()
     )
