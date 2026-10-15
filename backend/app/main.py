@@ -7,6 +7,7 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -61,6 +62,8 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(api_router)
+
+    app.mount("/app", StaticFiles(directory="../frontend/", html=True), name="miniapp")
 
     @app.on_event("startup")
     async def startup_event() -> None:
