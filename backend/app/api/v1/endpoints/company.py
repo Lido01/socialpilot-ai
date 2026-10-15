@@ -9,7 +9,13 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings, get_settings
 from app.core.deps import get_current_user, get_db
 from app.core.exceptions import ConflictError, ValidationError
-from app.models import Company, CompanyRegistrationRequest, CompanyStatus, User
+from app.models import (
+    Company,
+    CompanyRegistrationRequest,
+    CompanyStatus,
+    RegistrationStatus,
+    User,
+)
 from app.schemas.company import (
     CompanyRegistrationRequestCreate,
     CompanyRegistrationRequestResponse,
@@ -51,7 +57,7 @@ def register_company(
         .filter(
             CompanyRegistrationRequest.user_id == current_user.id,
             CompanyRegistrationRequest.normalized_name == normalized,
-            CompanyRegistrationRequest.status == "pending",
+            CompanyRegistrationRequest.status == RegistrationStatus.PENDING,
         )
         .first()
     )
@@ -84,7 +90,7 @@ def register_company(
         website=request.website,
         country=request.country,
         contact_email=request.contact_email,
-        status=CompanyStatus.PENDING,
+        status=RegistrationStatus.PENDING,
     )
 
     db.add(reg_request)

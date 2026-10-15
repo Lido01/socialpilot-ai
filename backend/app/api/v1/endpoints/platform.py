@@ -17,6 +17,7 @@ from app.models import (
     CompanyRegistrationRequest,
     CompanyStatus,
     MembershipRole,
+    RegistrationStatus,
     User,
 )
 from app.schemas.platform import (
@@ -52,7 +53,7 @@ def list_pending_companies(
     requests = (
         db.query(CompanyRegistrationRequest)
         .join(User, CompanyRegistrationRequest.user_id == User.id)
-        .filter(CompanyRegistrationRequest.status == CompanyStatus.PENDING)
+        .filter(CompanyRegistrationRequest.status == RegistrationStatus.PENDING)
         .order_by(CompanyRegistrationRequest.created_at.asc())
         .all()
     )
@@ -102,7 +103,7 @@ def approve_company(
         db.query(CompanyRegistrationRequest)
         .filter(
             CompanyRegistrationRequest.id == request_id,
-            CompanyRegistrationRequest.status == CompanyStatus.PENDING,
+            CompanyRegistrationRequest.status == RegistrationStatus.PENDING,
         )
         .first()
     )
@@ -146,7 +147,7 @@ def approve_company(
     )
     db.add(membership)
 
-    reg_request.status = CompanyStatus.APPROVED
+    reg_request.status = RegistrationStatus.APPROVED
     reg_request.company_id = company.id
     reg_request.reviewed_by = platform_owner.id
     reg_request.reviewed_at = datetime.now(timezone.utc)
@@ -157,7 +158,7 @@ def approve_company(
         action="company.approved",
         entity_type="company",
         entity_id=company.id,
-        meta={"registration_request_id": request_id, "previous_status": CompanyStatus.PENDING},
+        meta={"registration_request_id": request_id, "previous_status": RegistrationStatus.PENDING},
         ip_address=_get_client_ip(request),
     )
     db.add(audit)
@@ -193,7 +194,7 @@ def reject_company(
         db.query(CompanyRegistrationRequest)
         .filter(
             CompanyRegistrationRequest.id == request_id,
-            CompanyRegistrationRequest.status == CompanyStatus.PENDING,
+            CompanyRegistrationRequest.status == RegistrationStatus.PENDING,
         )
         .first()
     )
@@ -201,7 +202,7 @@ def reject_company(
     if not reg_request:
         raise ResourceNotFoundError("Pending registration request not found")
 
-    reg_request.status = CompanyStatus.REJECTED
+    reg_request.status = RegistrationStatus.REJECTED
     reg_request.rejection_reason = _request.reason.strip()
     reg_request.reviewed_by = platform_owner.id
     reg_request.reviewed_at = datetime.now(timezone.utc)
@@ -223,7 +224,7 @@ def reject_company(
         success=True,
         message="Company registration rejected",
         company_id=None,
-        company_status=CompanyStatus.REJECTED,
+        company_status=RegistrationStatus.REJECTED,
     )
 
 
@@ -248,7 +249,7 @@ def request_more_info(
         db.query(CompanyRegistrationRequest)
         .filter(
             CompanyRegistrationRequest.id == request_id,
-            CompanyRegistrationRequest.status == CompanyStatus.PENDING,
+            CompanyRegistrationRequest.status == RegistrationStatus.PENDING,
         )
         .first()
     )
@@ -256,7 +257,7 @@ def request_more_info(
     if not reg_request:
         raise ResourceNotFoundError("Pending registration request not found")
 
-    reg_request.status = CompanyStatus.INFO_REQUESTED
+    reg_request.status = RegistrationStatus.INFO_REQUESTED
     reg_request.rejection_reason = _request.reason.strip()
     reg_request.reviewed_by = platform_owner.id
     reg_request.reviewed_at = datetime.now(timezone.utc)
@@ -278,5 +279,5 @@ def request_more_info(
         success=True,
         message="More information requested",
         company_id=None,
-        company_status=CompanyStatus.INFO_REQUESTED,
+        company_status=RegistrationStatus.INFO_REQUESTED,
     )
