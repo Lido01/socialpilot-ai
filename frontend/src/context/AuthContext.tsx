@@ -41,6 +41,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkUserStatus = useCallback(async (token: string) => {
     try {
+      if (authService.isTokenExpired(token)) {
+        authService.clearToken();
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
       const decoded = authService.decodeToken(token);
       if (!decoded) {
         authService.clearToken();
@@ -82,7 +89,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           }
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err?.statusCode === 401) {
+          authService.clearToken();
+          setIsAuthenticated(false);
+          return;
+        }
         console.warn('Could not fetch registrations:', err);
       }
     } catch (err) {
@@ -97,15 +109,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initial check on mount
   useEffect(() => {
     const existingToken = authService.getToken();
-    if (existingToken) {
+    if (existingToken && !authService.isTokenExpired(existingToken)) {
       checkUserStatus(existingToken);
-    } else if (isInTelegram && initData) {
-      // Auto-authenticate inside Telegram with raw initData
-      loginWithTelegram(initData);
     } else {
-      setIsLoading(false);
+      authService.clearToken();
+      const freshTgData = window.Telegram?.WebApp?.initData || initData;
+      if (isInTelegram && freshTgData) {
+        // Auto-authenticate inside Telegram with fresh raw initData
+        loginWithTelegram(freshTgData);
+      } else {
+        setIsLoading(false);
+        setIsAuthenticated(false);
+      }
     }
   }, [isInTelegram, initData, checkUserStatus]);
+
+  // Handle background auth expiration (e.g. from 401 interceptor)
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      logout();
+      setIsLoading(false);
+    };
+    window.addEventListener('auth:expired', handleAuthExpired);
+    return () => window.removeEventListener('auth:expired', handleAuthExpired);
+  }, []);
 
   const loginWithTelegram = async (overrideInitData?: string): Promise<boolean> => {
     setIsLoading(true);

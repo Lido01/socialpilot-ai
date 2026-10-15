@@ -43,6 +43,17 @@ export const authService = {
     return localStorage.getItem('socialpilot_access_token');
   },
 
+  /**
+   * Check if the JWT token is missing, corrupted, or expired.
+   */
+  isTokenExpired(token: string | null): boolean {
+    if (!token) return true;
+    const decoded = this.decodeToken(token);
+    if (!decoded || !decoded.exp) return true;
+    // Buffer of 30 seconds
+    return decoded.exp * 1000 <= Date.now() + 30000;
+  },
+
   clearToken(): void {
     localStorage.removeItem('socialpilot_access_token');
   },

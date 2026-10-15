@@ -66,6 +66,40 @@ export async function apiClient<T>(
     });
 
     if (!response.ok) {
+      // If 401 Unauthorized occurs on protected routes, attempt silent re-auth in Telegram
+      if (response.status === 401 && !endpoint.includes('/auth/telegram') && !(options as any)._isRetry) {
+        const rawInitData = (window as any).Telegram?.WebApp?.initData;
+        if (rawInitData && rawInitData.trim().length > 0) {
+          try {
+            const authUrl = `${BASE_URL}/auth/telegram`;
+            const refreshRes = await fetch(authUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify({ init_data: rawInitData }),
+            });
+            if (refreshRes.ok) {
+              const refreshData = await refreshRes.json();
+              if (refreshData?.access_token) {
+                localStorage.setItem('socialpilot_access_token', refreshData.access_token);
+                const retryHeaders = new Headers(options.headers || {});
+                retryHeaders.set('Authorization', `Bearer ${refreshData.access_token}`);
+                return apiClient<T>(endpoint, {
+                  ...options,
+                  headers: retryHeaders,
+                  _isRetry: true,
+                } as any);
+              }
+            }
+          } catch {
+            // Re-authentication failed, continue to standard error handling
+          }
+        }
+
+        // Outside Telegram or re-auth failed: clear stale token and notify listeners
+        localStorage.removeItem('socialpilot_access_token');
+        window.dispatchEvent(new CustomEvent('auth:expired'));
+      }
+
       let errorPayload: ApiErrorPayload | undefined;
       try {
         const errorJson = await response.json();
