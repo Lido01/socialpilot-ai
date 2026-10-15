@@ -242,7 +242,11 @@ class TestAuthEndpoint:
 
     def test_auth_telegram_upserts_existing_user(self, client: TestClient, test_settings, db_session):
         """Test that authentication updates existing user."""
-        init_data = _make_init_data(test_settings.TELEGRAM_BOT_TOKEN, user_id=123456789, username="olduser")
+        user = User(telegram_id=123456789, username="olduser", display_name="Old User")
+        db_session.add(user)
+        db_session.commit()
+
+        init_data = _make_init_data(test_settings.TELEGRAM_BOT_TOKEN, user_id=123456789, username="testuser")
 
         response = client.post(
             "/api/v1/auth/telegram",
@@ -251,8 +255,7 @@ class TestAuthEndpoint:
 
         assert response.status_code == 200
 
-        user = db_session.query(User).filter(User.telegram_id == 123456789).first()
-        assert user is not None
+        db_session.refresh(user)
         assert user.username == "testuser"  # Updated from initData
 
     def test_auth_telegram_no_bot_token_configured(self, client: TestClient, db_session):
