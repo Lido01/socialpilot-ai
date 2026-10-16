@@ -4,3 +4,17 @@ __pycache__/
 .env
 .pytest_cache/
 .coverage
+socialpilot.db
+
+backend/.env
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.pytest_cache/
+backend/.coverage
+backend/data/
+backend/*.db
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/*.log
