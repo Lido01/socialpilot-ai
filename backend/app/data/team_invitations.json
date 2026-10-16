@@ -1,0 +1,79 @@
+[
+  {
+    "id": "member-1",
+    "company_id": "comp-1",
+    "company_name": "Apex Media Group",
+    "display_name": "Alex Rivers",
+    "username": "alex_rivers",
+    "telegram_id": 5298799880,
+    "role": "company_admin",
+    "is_active": true,
+    "assigned_channels": [
+      "chan-1",
+      "chan-2"
+    ],
+    "permissions": {
+      "can_create_posts": true,
+      "can_use_ai": true,
+      "can_auto_publish": true
+    },
+    "joined_at": "2026-10-06T12:00:00Z"
+  },
+  {
+    "id": "member-2",
+    "company_id": "comp-1",
+    "company_name": "Apex Media Group",
+    "display_name": "Jordan Lee",
+    "username": "jordan_creator",
+    "telegram_id": 123456789,
+    "role": "content_owner",
+    "is_active": true,
+    "assigned_channels": [
+      "chan-1"
+    ],
+    "permissions": {
+      "can_create_posts": true,
+      "can_use_ai": true,
+      "can_auto_publish": false
+    },
+    "joined_at": "2026-10-12T12:00:00Z"
+  },
+  {
+    "id": "member-3",
+    "company_id": "comp-1",
+    "company_name": "Apex Media Group",
+    "display_name": "Elena Rostova",
+    "username": "elena_growth",
+    "telegram_id": 987654321,
+    "role": "content_owner",
+    "is_active": true,
+    "assigned_channels": [
+      "chan-2"
+    ],
+    "permissions": {
+      "can_create_posts": true,
+      "can_use_ai": true,
+      "can_auto_publish": false
+    },
+    "joined_at": "2026-10-14T12:00:00Z"
+  },
+  {
+    "id": "member-1792154804795",
+    "company_id": "comp-1",
+    "company_name": "Apex Media Group",
+    "display_name": "Test Creator Alice",
+    "username": "alice_test_creator",
+    "telegram_id": null,
+    "role": "content_owner",
+    "is_active": true,
+    "assigned_channels": [
+      "chan-1"
+    ],
+    "permissions": {
+      "can_create_posts": true,
+      "can_use_ai": true,
+      "can_auto_publish": false
+    },
+    "joined_at": "2026-10-16T12:46:44Z"
+  }
+]

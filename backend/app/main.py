@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
@@ -61,6 +63,12 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(api_router)
+
+    frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+    frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"
+    target_dir = frontend_dist if frontend_dist.is_dir() else (frontend_dir if frontend_dir.is_dir() else None)
+    if target_dir:
+        app.mount("/app", StaticFiles(directory=str(target_dir), html=True), name="miniapp")
 
     @app.on_event("startup")
     async def startup_event() -> None:

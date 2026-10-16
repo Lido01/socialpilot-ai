@@ -13,6 +13,7 @@ from app.models import (
     CompanyStatus,
     CompanyMembership,
     MembershipRole,
+    RegistrationStatus,
     User,
     AuditLog,
 )
@@ -178,7 +179,7 @@ class TestPlatformOwnerEndpoints:
 
         # Verify registration request updated
         db_session.refresh(reg_request)
-        assert reg_request.status == CompanyStatus.APPROVED
+        assert reg_request.status == RegistrationStatus.APPROVED
         assert reg_request.company_id == company.id
 
     def test_approve_company_creates_audit_log(self, client: TestClient, test_settings, db_session: Session):
@@ -243,7 +244,7 @@ class TestPlatformOwnerEndpoints:
             user_id=user.id,
             name="Processed Company",
             normalized_name="processed company",
-            status=CompanyStatus.APPROVED,  # Already approved
+            status=RegistrationStatus.APPROVED,  # Already approved
         )
         db_session.add(reg_request)
         db_session.commit()
@@ -325,7 +326,7 @@ class TestPlatformOwnerEndpoints:
         assert data["company_status"] == "rejected"
 
         db_session.refresh(reg_request)
-        assert reg_request.status == CompanyStatus.REJECTED
+        assert reg_request.status == RegistrationStatus.REJECTED
         assert reg_request.rejection_reason == "Invalid industry"
         assert reg_request.reviewed_by is not None
 
@@ -368,7 +369,7 @@ class TestPlatformOwnerEndpoints:
         platform_owner_id = test_settings.PLATFORM_OWNER_TELEGRAM_ID
         token = _get_token(client, test_settings.TELEGRAM_BOT_TOKEN, platform_owner_id)
 
-        user = User(telegram_id=999999999, username="user9", display_name="User 9")
+        user = User(telegram_id=999999991, username="user9", display_name="User 9")
         db_session.add(user)
         db_session.commit()
 
@@ -393,7 +394,7 @@ class TestPlatformOwnerEndpoints:
         assert data["company_status"] == "info_requested"
 
         db_session.refresh(reg_request)
-        assert reg_request.status == CompanyStatus.INFO_REQUESTED
+        assert reg_request.status == RegistrationStatus.INFO_REQUESTED
 
     def test_reject_invalid_reason(self, client: TestClient, test_settings):
         """Test that rejection requires a reason."""

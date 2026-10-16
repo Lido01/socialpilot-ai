@@ -1,0 +1,34 @@
+[
+  {
+    "id": "chan-1",
+    "company_id": "comp-1",
+    "title": "SocialPilot AI Official",
+    "username": "@socialpilot_ai",
+    "telegram_chat_id": "-10022446688",
+    "subscriber_count": 1420,
+    "is_connected": true,
+    "bot_is_admin": true,
+    "settings": {
+      "auto_sign": true,
+      "signature": "\ud83d\udce2 Powered by SocialPilot AI",
+      "allow_discussion_forward": true
+    },
+    "created_at": "2026-10-06T12:00:00Z"
+  },
+  {
+    "id": "chan-2",
+    "company_id": "comp-1",
+    "title": "Tech & AI Insights Daily",
+    "username": "@tech_ai_insights",
+    "telegram_chat_id": "-10033557799",
+    "subscriber_count": 890,
+    "is_connected": true,
+    "bot_is_admin": true,
+    "settings": {
+      "auto_sign": false,
+      "signature": "",
+      "allow_discussion_forward": false
+    },
+    "created_at": "2026-10-12T12:00:00Z"
+  }
+]
